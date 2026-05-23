@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0A0A0F">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="RunTrack">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>RunTrack</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
+    body {
+      height: 100%; overflow: hidden;
+      font-family: 'DM Mono', 'Courier New', monospace;
+      background: #0A0A0F; color: #F0F0F0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #root { height: 100dvh; display: flex; flex-direction: column; }
+
+    /* HEADER */
+    .hdr {
+      padding: 52px 20px 14px;
+      display: flex; justify-content: space-between; align-items: center;
+      border-bottom: 1px solid #1A1A2A; flex-shrink: 0;
+    }
+    .logo { font-size: 13px; letter-spacing: 4px; color: #00FF87; font-weight: 500; }
+    .test-pill {
+      font-size: 10px; letter-spacing: 2px; color: #FF4444;
+      border: 1px solid rgba(255,68,68,0.3); padding: 5px 10px;
+      border-radius: 20px; background: rgba(255,68,68,0.06);
+    }
+
+    /* NAV */
+    .nav { display: flex; border-bottom: 1px solid #1A1A2A; flex-shrink: 0; }
+    .nav-btn {
+      flex: 1; padding: 13px 0; background: none; border: none;
+      color: #444; font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
+      cursor: pointer; border-bottom: 2px solid transparent;
+      font-family: inherit; transition: color 0.2s, border-color 0.2s;
+    }
+    .nav-btn.on { color: #00FF87; border-bottom-color: #00FF87; }
+
+    /* SCROLL AREA */
+    .main { flex: 1; overflow-y: auto; padding: 22px 18px 40px; -webkit-overflow-scrolling: touch; }
+    .main::-webkit-scrollbar { width: 2px; }
+    .main::-webkit-scrollbar-thumb { background: #1E1E2E; }
+
+    /* STATS */
+    .stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 18px; }
+    .stat {
+      background: #0F0F1A; border-radius: 12px; padding: 14px 10px; text-align: center;
+    }
+    .stat-n { font-size: 26px; font-weight: 500; line-height: 1; margin-bottom: 4px; }
+    .stat-l { font-size: 9px; letter-spacing: 2px; color: #555; text-transform: uppercase; }
+
+    /* PROGRESS */
+    .prog-card {
+      background: #0F0F1A; border: 1px solid #1A1A2A;
+      border-radius: 14px; padding: 18px 20px; margin-bottom: 18px;
+    }
+    .prog-lbl {
+      display: flex; justify-content: space-between; margin-bottom: 10px;
+      font-size: 10px; letter-spacing: 2px; color: #555; text-transform: uppercase;
+    }
+    .prog-bar { height: 5px; background: #1A1A2A; border-radius: 3px; overflow: hidden; }
+    .prog-fill {
+      height: 100%; background: linear-gradient(90deg,#00FF87,#00C8FF);
+      border-radius: 3px; transition: width 0.7s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg,#0C1810 0%,#0E0E1E 100%);
+      border: 1px solid rgba(0,255,135,0.15); border-radius: 16px;
+      padding: 26px 22px; position: relative; overflow: hidden;
+    }
+    .hero-glow {
+      position: absolute; top: -50px; right: -50px; width: 180px; height: 180px;
+      background: radial-gradient(circle, rgba(0,255,135,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-lbl { font-size: 9px; letter-spacing: 4px; color: rgba(0,255,135,0.5); margin-bottom: 6px; text-transform: uppercase; }
+    .hero-date { font-size: 12px; color: #666; margin-bottom: 10px; letter-spacing: 1px; }
+    .hero-title { font-size: 22px; font-weight: 500; color: #F0F0F0; line-height: 1.25; margin-bottom: 6px; }
+    .hero-reps { font-size: 11px; color: #00FF87; letter-spacing: 2px; margin-bottom: 14px; }
+    .hero-focus {
+      font-size: 12px; color: #999; line-height: 1.65; margin-bottom: 20px;
+      border-left: 2px solid rgba(0,255,135,0.2); padding-left: 12px;
+    }
+
+    /* BUTTONS */
+    .btn-go {
+      width: 100%; padding: 14px; background: #00FF87; color: #0A0A0F;
+      border: none; border-radius: 10px; font-size: 11px; letter-spacing: 3px;
+      font-family: inherit; font-weight: 500; text-transform: uppercase; cursor: pointer;
+    }
+    .btn-done-label {
+      width: 100%; padding: 14px; background: #0D1E12; color: #00FF87;
+      border: 1px solid rgba(0,255,135,0.2); border-radius: 10px;
+      font-size: 11px; letter-spacing: 2px; font-family: inherit; font-weight: 500;
+      text-transform: uppercase; cursor: pointer;
+    }
+    .btn-outline {
+      flex: 1; padding: 13px; background: none; border: 1px solid #252535;
+      border-radius: 10px; color: #555; font-family: inherit;
+      font-size: 10px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
+    }
+    .btn-confirm {
+      flex: 2; padding: 13px; background: #00FF87; border: none;
+      border-radius: 10px; color: #0A0A0F; font-family: inherit;
+      font-size: 10px; letter-spacing: 2px; font-weight: 500;
+      text-transform: uppercase; cursor: pointer;
+    }
+    .btn-load {
+      width: 100%; padding: 14px; background: #00FF87; color: #0A0A0F;
+      border: none; border-radius: 10px; font-size: 11px; letter-spacing: 3px;
+      font-family: inherit; font-weight: 500; text-transform: uppercase; cursor: pointer;
+      margin-top: 8px;
+    }
+    .btn-remove {
+      width: 100%; padding: 10px; background: none; border: 1px solid rgba(255,68,68,0.2);
+      border-radius: 8px; color: #FF4444; font-family: inherit;
+      font-size: 10px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 12px;
+    }
+
+    /* DAY ROWS */
+    .day-row {
+      display: flex; align-items: center; gap: 13px;
+      padding: 13px 15px; border-radius: 12px; margin-bottom: 7px;
+      cursor: pointer; border: 1px solid #181828; background: #0C0C1A;
+      transition: border-color 0.2s;
+    }
+    .day-row.today { border-color: rgba(0,255,135,0.22); background: #0C1810; }
+    .day-row.past  { opacity: 0.6; }
+    .day-row.testday { border-color: rgba(255,68,68,0.22); background: #180D0D; cursor: default; }
+    .day-icon {
+      width: 38px; height: 38px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; flex-shrink: 0;
+    }
+    .day-info { flex: 1; min-width: 0; }
+    .day-dt { font-size: 9px; color: #444; letter-spacing: 1.5px; margin-bottom: 2px; }
+    .day-sum { font-size: 13px; color: #DDD; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .day-chk { font-size: 16px; flex-shrink: 0; }
+
+    /* HISTORY CARDS */
+    .hist-card {
+      background: linear-gradient(135deg,#0C1810,#0E0E1E);
+      border: 1px solid rgba(0,255,135,0.12); border-radius: 14px;
+      padding: 18px 18px; margin-bottom: 12px;
+    }
+    .hist-lbl { font-size: 9px; letter-spacing: 4px; color: #00FF87; margin-bottom: 4px; }
+    .hist-dt { font-size: 11px; color: #444; letter-spacing: 1px; margin-bottom: 6px; }
+    .hist-title { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+    .hist-time { font-size: 11px; color: #00FF87; margin-bottom: 5px; }
+    .hist-note { font-size: 12px; color: #999; line-height: 1.55; border-left: 2px solid rgba(0,255,135,0.15); padding-left: 10px; }
+
+    /* IMPORT */
+    .imp-title { font-size: 10px; letter-spacing: 3px; color: #00FF87; text-transform: uppercase; margin-bottom: 12px; }
+    .imp-desc { font-size: 12px; color: #777; line-height: 1.65; margin-bottom: 18px; }
+    .drop-zone {
+      border: 2px dashed #252535; border-radius: 12px; padding: 30px 20px;
+      text-align: center; cursor: pointer; margin-bottom: 14px;
+      transition: border-color 0.2s;
+    }
+    .drop-zone:hover, .drop-zone.drag { border-color: rgba(0,255,135,0.4); }
+    .drop-icon { font-size: 30px; margin-bottom: 8px; }
+    .drop-txt { font-size: 11px; color: #555; letter-spacing: 1.5px; }
+    .divider { display: flex; align-items: center; gap: 10px; margin: 14px 0; }
+    .div-line { flex: 1; height: 1px; background: #1A1A2A; }
+    .div-txt { font-size: 9px; color: #383848; letter-spacing: 2px; }
+    .lbl { font-size: 9px; letter-spacing: 3px; color: #555; text-transform: uppercase; margin-bottom: 6px; display: block; }
+    .inp {
+      width: 100%; background: #080810; border: 1px solid #1A1A2A;
+      border-radius: 8px; padding: 12px 13px; color: #F0F0F0;
+      font-family: inherit; font-size: 13px; margin-bottom: 12px; outline: none;
+    }
+    .inp:focus { border-color: rgba(0,255,135,0.35); }
+    textarea.inp { min-height: 90px; resize: none; }
+    .preview-box {
+      background: #0A1A10; border: 1px solid rgba(0,255,135,0.18);
+      border-radius: 12px; padding: 16px; margin-top: 14px;
+    }
+    .preview-title { font-size: 9px; letter-spacing: 3px; color: #00FF87; margin-bottom: 10px; text-transform: uppercase; }
+    .preview-row { font-size: 12px; color: #999; margin-bottom: 4px; }
+    .warn-box {
+      background: rgba(255,184,0,0.04); border: 1px solid rgba(255,184,0,0.18);
+      border-radius: 10px; padding: 13px 14px; margin: 14px 0;
+      font-size: 11px; color: #FFB800; line-height: 1.6; letter-spacing: 0.3px;
+    }
+    .err-msg { color: #FF4444; font-size: 11px; margin-top: 8px; letter-spacing: 1px; }
+
+    /* MODAL */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.82);
+      z-index: 100; display: flex; align-items: flex-end;
+      backdrop-filter: blur(6px);
+    }
+    .modal-box {
+      width: 100%; background: #0E0E1C;
+      border: 1px solid #1A1A2A; border-top-left-radius: 22px; border-top-right-radius: 22px;
+      padding: 26px 22px 50px; animation: up 0.25s ease;
+    }
+    @keyframes up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .modal-title { font-size: 17px; font-weight: 500; margin-bottom: 4px; }
+    .modal-dt { font-size: 11px; color: #555; letter-spacing: 1px; margin-bottom: 20px; }
+    .modal-btns { display: flex; gap: 10px; margin-top: 4px; }
+
+    /* EMPTY */
+    .empty { text-align: center; color: #333; padding: 52px 0; letter-spacing: 2px; font-size: 11px; }
+
+    /* TOAST */
+    #toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      background: #00FF87; color: #0A0A0F; padding: 8px 20px; border-radius: 20px;
+      font-size: 10px; letter-spacing: 3px; font-weight: 500; text-transform: uppercase;
+      z-index: 200; pointer-events: none; opacity: 0; transition: opacity 0.3s;
+    }
+    #toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<div id="toast">SAVED ✓</div>
+<input type="file" id="ics-file" accept=".ics,text/calendar" style="display:none" onchange="App.handleFile(this)">
+
+<script>
+// ─────────────────────────────────────────────
+// DEFAULT SCHEDULE
+// ─────────────────────────────────────────────
+const DEFAULT_SCHEDULE = [
+  { date:"2026-05-20", type:"run",      summary:"8 Min Run / 1 Min Walk",   reps:4,    focus:"Acclimatize to the added minute of sustained effort. Maintain your current 2.4-mile pace." },
+  { date:"2026-05-21", type:"rest",     summary:"Rest / Cross-Train",        reps:null, focus:"Active Recovery: light walking or stretching. Muscles strengthen during rest days." },
+  { date:"2026-05-22", type:"run",      summary:"8 Min Run / 1 Min Walk",   reps:4,    focus:"Acclimatize to the added minute of sustained effort. Maintain your current 2.4-mile pace." },
+  { date:"2026-05-23", type:"rest",     summary:"Rest / Cross-Train",        reps:null, focus:"Active Recovery: light walking or stretching. Muscles strengthen during rest days." },
+  { date:"2026-05-24", type:"run",      summary:"8 Min Run / 1 Min Walk",   reps:4,    focus:"Acclimatize to the added minute of sustained effort. Maintain your current 2.4-mile pace." },
+  { date:"2026-05-25", type:"rest",     summary:"Rest / Cross-Train",        reps:null, focus:"Active Recovery: light walking or stretching. Muscles strengthen during rest days." },
+  { date:"2026-05-26", type:"run",      summary:"8 Min Run / 1 Min Walk",   reps:4,    focus:"Acclimatize to the added minute of sustained effort. Maintain your current 2.4-mile pace." },
+  { date:"2026-05-27", type:"rest",     summary:"Rest / Cross-Train",        reps:null, focus:"Active Recovery: light walking or stretching. Muscles strengthen during rest days." },
+  { date:"2026-05-28", type:"run",      summary:"8.5 Min Run / 1 Min Walk", reps:4,    focus:"Close the gap to the final goal. Focus on consistent pacing." },
+  { date:"2026-05-29", type:"rest",     summary:"Rest / Cross-Train",        reps:null, focus:"Active Recovery: light walking or stretching. Muscles strengthen during rest days." },
+  { date:"2026-05-30", type:"run",      summary:"8.5 Min Run / 1 Min Walk", reps:4,    focus:"Close the gap to the final goal. Focus on consistent pacing." },
+  { date:"2026-05-31", type:"rest",     summary:"Rest / Cross-Train",        reps:null, focus:"Active Recovery: light walking or stretching. Muscles strengthen during rest days." },
+  { date:"2026-06-01", type:"run",      summary:"8.5 Min Run / 1 Min Walk", reps:4,    focus:"Close the gap to the final goal. Focus on consistent pacing." },
+  { date:"2026-06-02", type:"rest",     summary:"Rest / Cross-Train",        reps:null, focus:"Active Recovery: light walking or stretching. Muscles strengthen during rest days." },
+  { date:"2026-06-03", type:"run",      summary:"9 Min Run / 1 Min Walk",   reps:4,    focus:"Hit the target duration. Ensure hydration and proper sleep." },
+  { date:"2026-06-04", type:"rest",     summary:"Rest / Cross-Train",        reps:null, focus:"Active Recovery: light walking or stretching. Muscles strengthen during rest days." },
+  { date:"2026-06-05", type:"run",      summary:"9 Min Run / 1 Min Walk",   reps:4,    focus:"Hit the target duration. Ensure hydration and proper sleep." },
+  { date:"2026-06-06", type:"rest",     summary:"Rest / Cross-Train",        reps:null, focus:"Active Recovery: light walking or stretching. Muscles strengthen during rest days." },
+  { date:"2026-06-07", type:"run",      summary:"9 Min Run / 1 Min Walk",   reps:4,    focus:"Hit the target duration. Ensure hydration and proper sleep." },
+  { date:"2026-06-08", type:"recovery", summary:"Active Recovery",           reps:null, focus:"Light 5-minute jogs or walking. Do not push for PRs right before the test." },
+  { date:"2026-06-09", type:"recovery", summary:"Active Recovery",           reps:null, focus:"Light 5-minute jogs or walking. Do not push for PRs right before the test." },
+  { date:"2026-06-10", type:"recovery", summary:"Active Recovery",           reps:null, focus:"Light 5-minute jogs or walking. Do not push for PRs right before the test." },
+  { date:"2026-06-11", type:"test",     summary:"FITNESS TEST",              reps:null, focus:"Execute the 9-minute intervals as planned. Good luck!" },
+];
+
+const TYPE_CFG = {
+  run:      { color:"#00FF87", icon:"🏃" },
+  rest:     { color:"#5B6BFF", icon:"💤" },
+  recovery: { color:"#FFB800", icon:"🚶" },
+  test:     { color:"#FF4444", icon:"🏁" },
+};
+
+// ─────────────────────────────────────────────
+// APP
+// ─────────────────────────────────────────────
+const App = {
+  s: {
+    schedule: [],
+    logs: {},
+    view: 'today',
+    modal: null,
+    timeVal: '', noteVal: '',
+    importPreview: null,
+    importError: '',
+    importText: '',
+  },
+
+  init() {
+    this.load();
+    this.render();
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  },
+
+  load() {
+    try { this.s.schedule = JSON.parse(localStorage.getItem('rt-sched')) || DEFAULT_SCHEDULE; }
+    catch(_) { this.s.schedule = DEFAULT_SCHEDULE; }
+    try { this.s.logs = JSON.parse(localStorage.getItem('rt-logs')) || {}; }
+    catch(_) { this.s.logs = {}; }
+  },
+
+  persist() {
+    localStorage.setItem('rt-sched', JSON.stringify(this.s.schedule));
+    localStorage.setItem('rt-logs', JSON.stringify(this.s.logs));
+    this.toast();
+  },
+
+  toast() {
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    clearTimeout(this._tt);
+    this._tt = setTimeout(() => t.classList.remove('show'), 1600);
+  },
+
+  // ── helpers ──────────────────────────────
+  today() { return new Date().toISOString().split('T')[0]; },
+
+  fmt(d) {
+    const [y,m,day] = d.split('-');
+    return new Date(y, m-1, day).toLocaleDateString('en-US', {weekday:'short',month:'short',day:'numeric'});
+  },
+
+  daysLeft() {
+    const t = this.s.schedule.find(d => d.type==='test');
+    if (!t) return '?';
+    return Math.max(0, Math.ceil((new Date(t.date) - new Date(this.today())) / 86400000));
+  },
+
+  done() { return this.s.schedule.filter(d => this.s.logs[d.date]?.done && d.type!=='test').length; },
+  total() { return this.s.schedule.filter(d => d.type!=='test').length; },
+
+  esc(s) {
+    return String(s||'')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  },
+
+  // ── render ───────────────────────────────
+  render() {
+    const s = this.s;
+    document.getElementById('root').innerHTML =
+      this.rHdr() + this.rNav() +
+      `<div class="main">` +
+        (s.view==='today'    ? this.rToday()    :
+         s.view==='schedule' ? this.rSchedule() :
+         s.view==='history'  ? this.rHistory()  :
+                               this.rImport()) +
+      `</div>` +
+      (s.modal ? this.rModal() : '');
+  },
+
+  rHdr() {
+    const dl = this.daysLeft();
+    const badge = dl===0 ? '🏁 TEST DAY' : `TEST IN ${dl}D`;
+    return `<div class="hdr"><span class="logo">⚡ RUNTRACK</span><span class="test-pill">${this.esc(badge)}</span></div>`;
+  },
+
+  rNav() {
+    return `<div class="nav">${
+      [['today','Today'],['schedule','Schedule'],['history','History'],['import','Import']]
+      .map(([id,lbl]) => `<button class="nav-btn${this.s.view===id?' on':''}" onclick="App.go('${id}')">${lbl}</button>`)
+      .join('')
+    }</div>`;
+  },
+
+  rToday() {
+    const today = this.today(), logs = this.s.logs, sched = this.s.schedule;
+    const hero = sched.find(d=>d.date===today) || sched.find(d=>d.date>today);
+    const done = this.done(), total = this.total();
+    const pct = total ? Math.round(done/total*100) : 0;
+
+    return `
+      <div class="stats">
+        <div class="stat" style="border:1px solid rgba(0,255,135,.12)">
+          <div class="stat-n" style="color:#00FF87">${done}</div>
+          <div class="stat-l">Done</div>
+        </div>
+        <div class="stat" style="border:1px solid rgba(91,107,255,.12)">
+          <div class="stat-n" style="color:#5B6BFF">${pct}%</div>
+          <div class="stat-l">Progress</div>
+        </div>
+        <div class="stat" style="border:1px solid rgba(255,68,68,.12)">
+          <div class="stat-n" style="color:#FF4444">${this.daysLeft()}</div>
+          <div class="stat-l">Days Left</div>
+        </div>
+      </div>
+      <div class="prog-card">
+        <div class="prog-lbl"><span>Progress to Test</span><span style="color:#00FF87">${done}/${total}</span></div>
+        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+      </div>
+      ${hero ? this.rHero(hero) : '<div class="hero"><div class="hero-title">🏁 Schedule Complete!</div></div>'}
+    `;
+  },
+
+  rHero(day) {
+    const isDone = this.s.logs[day.date]?.done;
+    const isToday = day.date === this.today();
+    return `
+      <div class="hero">
+        <div class="hero-glow"></div>
+        <div class="hero-lbl">${isToday ? "Today's Workout" : "Next Up"}</div>
+        <div class="hero-date">${this.fmt(day.date)}</div>
+        <div class="hero-title">${this.esc(day.summary)}</div>
+        ${day.reps ? `<div class="hero-reps">× ${day.reps} REPS</div>` : ''}
+        <div class="hero-focus">${this.esc(day.focus)}</div>
+        ${isDone
+          ? `<button class="btn-done-label" onclick="App.unmark('${day.date}')">✓ Completed — Tap to Undo</button>`
+          : `<button class="btn-go" onclick="App.openModal('${day.date}')">Log This Workout</button>`}
+      </div>`;
+  },
+
+  rSchedule() {
+    const today = this.today();
+    return this.s.schedule.map(day => {
+      const cfg = TYPE_CFG[day.type] || TYPE_CFG.run;
+      const isToday = day.date === today;
+      const isPast  = day.date < today;
+      const isDone  = this.s.logs[day.date]?.done;
+      const cls = ['day-row', isToday?'today':'', isPast&&!isToday?'past':'', day.type==='test'?'testday':''].filter(Boolean).join(' ');
+      const click = day.type!=='test' ? `onclick="App.openModal('${day.date}')"` : '';
+      return `
+        <div class="${cls}" ${click}>
+          <div class="day-icon" style="background:${cfg.color}12;border:1px solid ${cfg.color}25">${cfg.icon}</div>
+          <div class="day-info">
+            <div class="day-dt">${this.fmt(day.date)}${isToday?' · TODAY':''}</div>
+            <div class="day-sum">${this.esc(day.summary)}</div>
+          </div>
+          <div class="day-chk">${isDone?'✅':isPast&&!isToday?'○':''}</div>
+        </div>`;
+    }).join('');
+  },
+
+  rHistory() {
+    const done = this.s.schedule.filter(d => this.s.logs[d.date]?.done);
+    if (!done.length) return `<div class="empty">NO WORKOUTS LOGGED YET</div>`;
+    return [...done].reverse().map(day => {
+      const e = this.s.logs[day.date];
+      return `
+        <div class="hist-card">
+          <div class="hist-lbl">✅ Completed</div>
+          <div class="hist-dt">${this.fmt(day.date)}</div>
+          <div class="hist-title">${this.esc(day.summary)}</div>
+          ${e.time ? `<div class="hist-time">⏱ ${this.esc(e.time)}</div>` : ''}
+          ${e.note ? `<div class="hist-note">${this.esc(e.note)}</div>` : ''}
+          <button class="btn-remove" onclick="App.unmark('${day.date}')">Remove Entry</button>
+        </div>`;
+    }).join('');
+  },
+
+  rImport() {
+    const p = this.s.importPreview, err = this.s.importError;
+    return `
+      <div>
+        <div class="imp-title">Import New Schedule</div>
+        <div class="imp-desc">
+          Upload any .ics calendar file (iCalendar format) to replace the current running schedule.
+          Works with any .ics file generated by Google Calendar, Apple Calendar, or AI scheduling tools.
+        </div>
+
+        <div class="drop-zone" id="drop-zone"
+             onclick="document.getElementById('ics-file').click()"
+             ondragover="event.preventDefault();this.classList.add('drag')"
+             ondragleave="this.classList.remove('drag')"
+             ondrop="App.handleDrop(event)">
+          <div class="drop-icon">📅</div>
+          <div class="drop-txt">TAP TO SELECT .ICS FILE</div>
+        </div>
+
+        <div class="divider">
+          <div class="div-line"></div>
+          <div class="div-txt">OR PASTE ICS TEXT</div>
+          <div class="div-line"></div>
+        </div>
+
+        <label class="lbl">Paste ICS content</label>
+        <textarea class="inp" id="imp-ta" rows="5"
+          placeholder="BEGIN:VCALENDAR&#10;VERSION:2.0&#10;..."
+          oninput="App.handlePaste(this.value)">${this.esc(this.s.importText)}</textarea>
+
+        ${err ? `<div class="err-msg">⚠ ${this.esc(err)}</div>` : ''}
+
+        ${p ? `
+          <div class="preview-box">
+            <div class="preview-title">Preview</div>
+            <div class="preview-row">📆 ${p.length} events found</div>
+            <div class="preview-row">🏃 ${p.filter(d=>d.type==='run').length} run days</div>
+            <div class="preview-row">💤 ${p.filter(d=>d.type==='rest').length} rest days</div>
+            <div class="preview-row">🚶 ${p.filter(d=>d.type==='recovery').length} recovery days</div>
+            ${p.length ? `<div class="preview-row">📅 ${this.fmt(p[0].date)} → ${this.fmt(p[p.length-1].date)}</div>` : ''}
+          </div>
+          <div class="warn-box">
+            ⚠ Loading a new schedule will keep your existing workout logs. Logs that don't match new schedule dates won't appear in History.
+          </div>
+          <button class="btn-load" onclick="App.confirmImport()">
+            Load Schedule (${p.length} Events)
+          </button>
+        ` : ''}
+      </div>`;
+  },
+
+  rModal() {
+    const day = this.s.modal;
+    return `
+      <div class="overlay" onclick="App.closeModal(event)">
+        <div class="modal-box">
+          <div class="modal-title">${this.esc(day.summary)}</div>
+          <div class="modal-dt">${this.fmt(day.date)}</div>
+          <label class="lbl">Time / Duration (optional)</label>
+          <input class="inp" id="m-time" type="text" placeholder="e.g. 36 min, 9:24 pace" value="${this.esc(this.s.timeVal)}">
+          <label class="lbl">Notes (optional)</label>
+          <textarea class="inp" id="m-note" placeholder="How did it feel?">${this.esc(this.s.noteVal)}</textarea>
+          <div class="modal-btns">
+            <button class="btn-outline" onclick="App.closeModal()">Cancel</button>
+            <button class="btn-confirm" onclick="App.markDone()">Mark Complete</button>
+          </div>
+        </div>
+      </div>`;
+  },
+
+  // ── actions ──────────────────────────────
+  go(v) { this.s.view=v; this.render(); },
+
+  openModal(date) {
+    const day = this.s.schedule.find(d=>d.date===date);
+    if (!day || day.type==='test') return;
+    this.s.modal = day;
+    this.s.timeVal = this.s.logs[date]?.time || '';
+    this.s.noteVal = this.s.logs[date]?.note || '';
+    this.render();
+  },
+
+  closeModal(e) {
+    if (e && e.target !== e.currentTarget) return;
+    this.s.modal = null;
+    this.render();
+  },
+
+  markDone() {
+    const day = this.s.modal; if (!day) return;
+    this.s.logs[day.date] = {
+      done: true,
+      time: document.getElementById('m-time')?.value || '',
+      note: document.getElementById('m-note')?.value || '',
+      loggedAt: new Date().toISOString(),
+    };
+    this.s.modal = null;
+    this.persist();
+    this.render();
+  },
+
+  unmark(date) {
+    delete this.s.logs[date];
+    this.persist();
+    this.render();
+  },
+
+  handleFile(input) {
+    const file = input.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const text = e.target.result;
+      this.s.importText = text;
+      this.parseICS(text);
+      this.render();
+    };
+    reader.readAsText(file);
+  },
+
+  handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('drop-zone')?.classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      this.s.importText = ev.target.result;
+      this.parseICS(ev.target.result);
+      this.render();
+    };
+    reader.readAsText(file);
+  },
+
+  handlePaste(text) {
+    this.s.importText = text;
+    clearTimeout(this._pt);
+    if (text.trim().length > 30) {
+      this._pt = setTimeout(() => { this.parseICS(text); this.render(); }, 450);
+    }
+  },
+
+  parseICS(text) {
+    try {
+      const result = parseICSText(text);
+      if (!result.length) {
+        this.s.importPreview = null;
+        this.s.importError = 'No events found. Make sure this is a valid .ics file with VEVENT blocks.';
+      } else {
+        this.s.importPreview = result;
+        this.s.importError = '';
+      }
+    } catch(_) {
+      this.s.importPreview = null;
+      this.s.importError = 'Could not parse this file. Please check it is a valid .ics file.';
+    }
+  },
+
+  confirmImport() {
+    if (!this.s.importPreview) return;
+    this.s.schedule = this.s.importPreview;
+    this.s.importPreview = null;
+    this.s.importText = '';
+    this.s.importError = '';
+    this.persist();
+    this.s.view = 'today';
+    this.render();
+  },
+};
+
+// ─────────────────────────────────────────────
+// ICS PARSER
+// ─────────────────────────────────────────────
+function parseICSText(raw) {
+  // Unfold continuation lines (RFC 5545 line folding)
+  const text = raw.replace(/\r\n[ \t]/g,'').replace(/\n[ \t]/g,'');
+  const events = [];
+  const re = /BEGIN:VEVENT([\s\S]*?)END:VEVENT/g;
+  let m;
+
+  while ((m = re.exec(text)) !== null) {
+    const block = m[1];
+
+    const get = key => {
+      // Match key with optional parameters like ;VALUE=DATE
+      const match = block.match(new RegExp(`^${key}[^:\r\n]*:([^\r\n]*)`, 'm'));
+      return match ? match[1].trim() : '';
+    };
+
+    const rawDate = get('DTSTART');
+    const summary  = get('SUMMARY');
+    const desc     = get('DESCRIPTION');
+    if (!rawDate || !summary) continue;
+
+    // Date: extract 8 digits (handles YYYYMMDD or YYYY-MM-DD)
+    const digits = rawDate.replace(/\D/g,'').slice(0,8);
+    if (digits.length < 8) continue;
+    const date = `${digits.slice(0,4)}-${digits.slice(4,6)}-${digits.slice(6,8)}`;
+
+    // Type detection
+    const sl = summary.toLowerCase();
+    let type = 'run';
+    if      (sl.includes('fitness test') || sl === 'test day') type = 'test';
+    else if (sl.includes('active recovery'))                   type = 'recovery';
+    else if (sl.includes('rest') || sl.includes('cross'))      type = 'rest';
+
+    // Reps (e.g. "(4 Reps)")
+    const rm = summary.match(/\((\d+)\s*reps?\)/i);
+    const reps = rm ? parseInt(rm[1]) : null;
+
+    // Clean summary
+    let clean = summary
+      .replace(/^Running Plan:\s*/i,'')
+      .replace(/\s*\(\d+\s*reps?\)/i,'')
+      .trim();
+    if (type === 'test') clean = 'FITNESS TEST';
+
+    // Clean description
+    const focus = desc.replace(/\\n/g,' ').replace(/\\/g,'').trim();
+
+    events.push({ date, type, summary: clean, reps, focus });
+  }
+
+  return events.sort((a,b) => a.date.localeCompare(b.date));
+}
+
+// ─────────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────────
+App.init();
+</script>
+</body>
+</html>
